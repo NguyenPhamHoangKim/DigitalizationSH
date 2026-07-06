@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Digitalization — Bản đồ hiện trạng</title>
+<style>
+  :root{ --ink:#1B2430; --muted:#5B6675; --line:#E4E8EF; --bg:#F7F8FA; }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; height:100%; }
+  body{ font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans","Helvetica Neue",Arial,sans-serif; color:var(--ink); background:var(--bg); display:flex; flex-direction:column; overflow:hidden; }
+
+  header{ background:#fff; border-bottom:1px solid var(--line); padding:12px 18px; display:flex; align-items:flex-start; gap:16px; flex-wrap:wrap; }
+  .brand{ display:flex; flex-direction:column; gap:3px; min-width:220px; }
+  .brand h1{ font-size:17px; margin:0; letter-spacing:-.01em; font-weight:750; }
+  .brand h1 b{ color:#0F172A; }
+  .brand p{ margin:0; font-size:12.5px; color:var(--muted); }
+  .spacer{ flex:1 1 40px; }
+  .stats{ display:flex; gap:8px; align-items:center; }
+  .chip{ font-size:12px; color:#334155; background:#F1F4F9; border:1px solid var(--line); padding:5px 10px; border-radius:999px; white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .chip b{ color:#0F172A; }
+
+  .legend{ display:flex; gap:14px; align-items:center; flex-wrap:wrap; padding:8px 18px; background:#fff; border-bottom:1px solid var(--line); }
+  .legend .lg{ display:flex; align-items:center; gap:7px; font-size:12.5px; color:#3A4453; }
+  .legend .sw{ width:11px; height:11px; border-radius:3px; }
+
+  .toolbar{ display:flex; gap:7px; align-items:center; flex-wrap:wrap; padding:10px 18px; background:#fff; border-bottom:1px solid var(--line); }
+  button.tb{ font:inherit; font-size:13px; color:#25303F; background:#fff; border:1px solid #E1E6EE; padding:7px 12px; border-radius:9px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:background .14s,border-color .14s; }
+  button.tb:hover{ background:#F1F4F9; border-color:#D3DAE5; }
+  button.tb:focus-visible{ outline:2px solid #2563EB; outline-offset:2px; }
+  button.tb.primary{ background:#0F172A; color:#fff; border-color:#0F172A; }
+  button.tb.primary:hover{ background:#1E293B; }
+  .sep{ width:1px; height:22px; background:var(--line); margin:0 3px; }
+  .tb svg{ display:block; }
+
+  .stage{ position:relative; flex:1 1 auto; overflow:hidden;
+    background-color:var(--bg);
+    background-image:linear-gradient(#EAEDF3 1px,transparent 1px),linear-gradient(90deg,#EAEDF3 1px,transparent 1px);
+    background-size:26px 26px; touch-action:none; }
+  #svg{ position:absolute; inset:0; width:100%; height:100%; cursor:grab; }
+  #svg.grabbing{ cursor:grabbing; }
+  .node text{ user-select:none; }
+
+  .hint{ position:absolute; left:14px; bottom:12px; font-size:11.5px; color:#7A8496; background:rgba(255,255,255,.86); border:1px solid var(--line); padding:6px 11px; border-radius:8px; backdrop-filter:blur(3px); }
+  .foot{ position:absolute; right:14px; bottom:12px; font-size:11px; color:#98A1B0; }
+
+  @media (max-width:640px){
+    .brand h1{ font-size:15.5px; } .hint{ display:none; } header{ padding:10px 14px; }
+    .toolbar,.legend{ padding:9px 14px; }
+  }
+</style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <h1><b>Digitalization</b> — Bản đồ hiện trạng &amp; vấn đề</h1>
+      <p>Toàn cảnh hệ thống và các điểm cần cải thiện</p>
+    </div>
+    <div class="spacer"></div>
+    <div class="stats" id="stats"></div>
+  </header>
+
+  <div class="legend" id="legend"></div>
+
+  <div class="toolbar">
+    <button class="tb" id="btnExpand">Mở tất cả</button>
+    <button class="tb" id="btnCollapse">Thu gọn</button>
+    <button class="tb" id="btnFit">Vừa màn hình</button>
+    <div class="sep"></div>
+    <button class="tb" id="btnZoomOut" aria-label="Thu nhỏ">－</button>
+    <button class="tb" id="btnZoomIn" aria-label="Phóng to">＋</button>
+    <div class="sep"></div>
+    <button class="tb primary" id="btnPng">⬇ Tải PNG</button>
+    <button class="tb" id="btnPrint">🖨 In / PDF</button>
+  </div>
+
+  <div class="stage" id="stage">
+    <svg id="svg"><g id="pan"><g id="content"></g></g></svg>
+    <div class="hint">Nhấp node để mở/thu gọn · Kéo để di chuyển · Cuộn để phóng to</div>
+    <div class="foot" id="foot"></div>
+  </div>
+
+<script>
+const RAW = {"name": "Digitalization", "children": [{"name": "Core ERP", "children": [{"name": "Hạ tầng Server chính"}, {"name": "Tích hợp POS <-> SAP"}, {"name": "Phối hợp với FTI"}, {"name": "Quy trình vận hành chưa tối ưu"}], "status": "Vấn đề hiện tại"}, {"name": "DW & BI", "children": [{"name": "Chưa có DW quản trị & làm sạch dữ liệu"}, {"name": "Đang làm thủ công 1 số báo cáo Power BI", "children": [{"name": "Dễ sai sót do phụ thuộc con người xuất file thủ công"}, {"name": "Làm sạch dữ liệu & Logic tính toán nằm rải rác ở các báo cáo Power BI"}, {"name": "Rất khó kiểm soát với dữ liệu history lớn"}, {"name": "Dữ liệu được xuất file lưu trên máy tính sẽ ảnh hưởng Data Security"}]}, {"name": "Chưa có các báo cáo tổng hợp quản trị toàn diện", "children": [{"name": "MI", "children": [{"name": "Sales Volume"}, {"name": "Revenue"}, {"name": "COGS"}, {"name": "Gross Profit"}, {"name": "OPEX"}, {"name": "Operating Profit"}, {"name": "Inventory"}, {"name": "AR/AP"}]}, {"name": "SH Production", "children": [{"name": "Loss In Transit"}, {"name": "Process Volume"}, {"name": "Mortality & Culling"}, {"name": "Inward SH"}, {"name": "Shrinkage"}, {"name": "Yield"}, {"name": "Cutting Loss"}, {"name": "…"}]}, {"name": "Farm Production", "children": [{"name": "Chick In"}, {"name": "ABW & Age"}, {"name": "FCR"}, {"name": "Depletion"}, {"name": "ADG"}, {"name": "Chick Out"}, {"name": "…"}]}]}], "status": "Vấn đề hiện tại"}, {"name": "Support Systems", "children": [{"name": "BPM (Business Process Management)"}, {"name": "HRM (Human Resource Management)"}, {"name": "Logistic QR"}, {"name": "CRS (Continuous Replenishment System)"}, {"name": "DPS (Demand Planning System)"}, {"name": "…"}], "status": "Chưa có hệ thống"}, {"name": "IT Management", "children": [{"name": "Infrastructure Management"}, {"name": "Cost & Budget"}, {"name": "Security"}, {"name": "Policy"}], "status": "Chưa có hệ thống"}]};
+
+const FONT='ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans","Helvetica Neue",Arial,sans-serif';
+const BRANCH=['#2563EB','#7C3AED','#0D9488','#D97706','#DB2777','#0891B2','#4F46E5'];
+const ROOTC='#0F172A';
+const PADX=14, PADY=9, HGAP=64, VGAP=13;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const mctx=document.createElement('canvas').getContext('2d');
+
+let uid=0;
+(function prep(n,depth,bi){
+  n.id='n'+(uid++); n.depth=depth; n.bi=bi;
+  n.color = depth===0?ROOTC:BRANCH[bi%BRANCH.length];
+  n.collapsed=false; n._children=n.children||[];
+  n._children.forEach((c,i)=>prep(c,depth+1, depth===0?i:bi));
+})(RAW,0,0);
+
+const NODES={}; (function idx(n){NODES[n.id]=n;n._children.forEach(idx);})(RAW);
+
+function fontFor(d){ if(d===0)return[17,700]; if(d===1)return[15,700]; if(d===2)return[14,600]; return[13,500]; }
+function maxwFor(d){ if(d===0)return 230; if(d<=2)return 200; return 250; }
+
+function measure(n){
+  const [sz,wt]=fontFor(n.depth);
+  mctx.font=wt+' '+sz+'px '+FONT;
+  const maxW=maxwFor(n.depth);
+  const words=String(n.name).split(/\s+/); const lines=[]; let cur='';
+  for(const w of words){ const t=cur?cur+' '+w:w;
+    if(mctx.measureText(t).width<=maxW||!cur) cur=t; else{lines.push(cur);cur=w;} }
+  if(cur)lines.push(cur);
+  let lw=0; for(const l of lines) lw=Math.max(lw,mctx.measureText(l).width);
+  n.lines=lines; n.fs=sz; n.fw=wt; n.lh=Math.round(sz*1.34);
+  const dot = n.depth>=2?16:0;
+  let w=Math.ceil(lw)+PADX*2+dot;
+  let h=PADY*2+lines.length*n.lh;
+  if(n.status){
+    mctx.font='600 11px '+FONT;
+    const bw=Math.ceil(mctx.measureText(n.status).width)+26;
+    n.badgeW=bw; w=Math.max(w,bw+PADX*2); h+=22;
+  }
+  n.w=Math.max(w,72); n.h=h;
+}
+(function m(n){measure(n);n._children.forEach(m);})(RAW);
+
+const colW={}; (function cw(n){colW[n.depth]=Math.max(colW[n.depth]||0,n.w);n._children.forEach(cw);})(RAW);
+const maxDepth=Math.max(...Object.keys(colW).map(Number));
+const colX={}; { let x=0; for(let d=0; d<=maxDepth; d++){ colX[d]=x; x+=colW[d]+HGAP; } }
+
+let totalH=0;
+function layout(){ let y=0;
+  (function place(n){
+    n.x=colX[n.depth];
+    const kids=n.collapsed?[]:n._children;
+    if(!kids.length){ n.cy=y+n.h/2; y+=n.h+VGAP; }
+    else{ kids.forEach(place); n.cy=(kids[0].cy+kids[kids.length-1].cy)/2; }
+  })(RAW);
+  totalH=y;
+}
+
+function statusStyle(s){
+  if(/Vấn đề/i.test(s)) return {bg:'#FEF3C7',fg:'#92400E',dot:'#F59E0B'};
+  if(/Chưa có/i.test(s)) return {bg:'#FFE4E6',fg:'#9F1239',dot:'#FB7185'};
+  return {bg:'#F1F5F9',fg:'#334155',dot:'#94A3B8'};
+}
+
+function contentSVG(){
+  let links='', nodes='';
+  (function walk(n){
+    const kids=n.collapsed?[]:n._children;
+    for(const c of kids){
+      const x1=n.x+n.w,y1=n.cy,x2=c.x,y2=c.cy, dx=Math.max(28,(x2-x1)*0.5);
+      const sw=n.depth===0?2.4:(n.depth===1?1.9:1.5);
+      links+='<path d="M'+x1+' '+y1+' C '+(x1+dx)+' '+y1+' '+(x2-dx)+' '+y2+' '+x2+' '+y2+'" fill="none" stroke="'+c.color+'" stroke-opacity="0.5" stroke-width="'+sw+'"/>';
+    }
+    kids.forEach(walk);
+    const rx=n.depth===0?12:(n.depth===1?11:9), top=n.cy-n.h/2;
+    let card;
+    if(n.depth===0) card='<rect x="'+n.x+'" y="'+top+'" width="'+n.w+'" height="'+n.h+'" rx="'+rx+'" fill="'+ROOTC+'"/>';
+    else if(n.depth===1) card='<rect x="'+n.x+'" y="'+top+'" width="'+n.w+'" height="'+n.h+'" rx="'+rx+'" fill="#ffffff" stroke="'+n.color+'" stroke-width="2"/>';
+    else card='<rect x="'+n.x+'" y="'+top+'" width="'+n.w+'" height="'+n.h+'" rx="'+rx+'" fill="#ffffff" stroke="#E5E9F0" stroke-width="1"/>';
+
+    const textX=n.x+PADX+(n.depth>=2?14:0);
+    let dot='';
+    if(n.depth>=2){ const dcy=top+PADY+n.fs*0.55; dot='<circle cx="'+(n.x+PADX+3)+'" cy="'+dcy+'" r="3.2" fill="'+n.color+'"/>'; }
+
+    const tcol=n.depth===0?'#ffffff':(n.depth===1?n.color:'#1F2733');
+    const ty0=top+PADY; let tsp='';
+    n.lines.forEach((l,i)=>{ tsp+='<tspan x="'+textX+'" y="'+(ty0+i*n.lh+n.fs*0.9)+'">'+esc(l)+'</tspan>'; });
+    const text='<text font-family=\''+FONT+'\' font-size="'+n.fs+'" font-weight="'+n.fw+'" fill="'+tcol+'">'+tsp+'</text>';
+
+    let badge='';
+    if(n.status){ const st=statusStyle(n.status), by=ty0+n.lines.length*n.lh+2, bw=n.badgeW, bh=18;
+      badge='<rect x="'+textX+'" y="'+by+'" width="'+bw+'" height="'+bh+'" rx="9" fill="'+st.bg+'"/>'
+          +'<circle cx="'+(textX+11)+'" cy="'+(by+bh/2)+'" r="3" fill="'+st.dot+'"/>'
+          +'<text x="'+(textX+20)+'" y="'+(by+bh/2+3.7)+'" font-family=\''+FONT+'\' font-size="11" font-weight="600" fill="'+st.fg+'">'+esc(n.status)+'</text>';
+    }
+
+    let tog='';
+    if(n._children.length){ const cx=n.x+n.w, cy=n.cy;
+      if(n.collapsed){ const cnt=n._children.length, rw=Math.max(20,String(cnt).length*8+14);
+        tog='<rect x="'+(cx-1)+'" y="'+(cy-9)+'" width="'+rw+'" height="18" rx="9" fill="'+n.color+'"/>'
+          +'<text x="'+(cx-1+rw/2)+'" y="'+(cy+3.7)+'" text-anchor="middle" font-family=\''+FONT+'\' font-size="11" font-weight="700" fill="#fff">'+cnt+'</text>';
+      } else {
+        tog='<circle cx="'+cx+'" cy="'+cy+'" r="8.5" fill="#ffffff" stroke="'+n.color+'" stroke-width="1.6"/>'
+          +'<line x1="'+(cx-4)+'" y1="'+cy+'" x2="'+(cx+4)+'" y2="'+cy+'" stroke="'+n.color+'" stroke-width="1.8"/>';
+      }
+    }
+    const cursor=n._children.length?'pointer':'default';
+    nodes+='<g class="node" data-id="'+n.id+'" style="cursor:'+cursor+'">'+card+dot+text+badge+tog+'</g>';
+  })(RAW);
+  return {links,nodes};
+}
+
+const svg=document.getElementById('svg'), pan=document.getElementById('pan'), content=document.getElementById('content');
+const view={tx:0,ty:0,k:1};
+function apply(){ pan.setAttribute('transform','translate('+view.tx+' '+view.ty+') scale('+view.k+')'); }
+function render(){ const {links,nodes}=contentSVG(); content.innerHTML=links+nodes; }
+
+function contentDims(){ return {w:colX[maxDepth]+colW[maxDepth], h:totalH}; }
+function fit(){
+  const d=contentDims(), r=svg.getBoundingClientRect(), pad=40;
+  const k=clamp(Math.min((r.width-pad*2)/d.w,(r.height-pad*2)/d.h),0.12,1.5);
+  view.k=k; view.tx=(r.width-d.w*k)/2; view.ty=(r.height-d.h*k)/2; apply();
+}
+function zoomAt(mx,my,f){ const nk=clamp(view.k*f,0.12,3);
+  view.tx=mx-(mx-view.tx)*(nk/view.k); view.ty=my-(my-view.ty)*(nk/view.k); view.k=nk; apply(); }
+
+function toggle(id){ const n=NODES[id]; if(!n||!n._children.length)return; n.collapsed=!n.collapsed; layout(); render(); }
+
+// ---- pointer: pan / click / pinch ----
+const pts=new Map(); let single=null, pinch=null;
+svg.addEventListener('pointerdown',e=>{ pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pts.size===1){ const g=e.target.closest('.node'); single={x:e.clientX,y:e.clientY,tx:view.tx,ty:view.ty,moved:false,id:g?g.dataset.id:null}; svg.classList.add('grabbing'); }
+  else if(pts.size===2){ pinch=null; single=null; }
+  try{svg.setPointerCapture(e.pointerId);}catch(_){}
+});
+svg.addEventListener('pointermove',e=>{
+  if(pts.has(e.pointerId)) pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pts.size>=2){ const [a,b]=[...pts.values()]; const r=svg.getBoundingClientRect();
+    const dist=Math.hypot(a.x-b.x,a.y-b.y), mid={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
+    if(!pinch){ pinch={d:dist,k:view.k,tx:view.tx,ty:view.ty,mx:mid.x-r.left,my:mid.y-r.top}; return; }
+    const nk=clamp(pinch.k*(dist/pinch.d),0.12,3);
+    view.tx=pinch.mx-(pinch.mx-pinch.tx)*(nk/pinch.k); view.ty=pinch.my-(pinch.my-pinch.ty)*(nk/pinch.k); view.k=nk; apply(); return;
+  }
+  if(single){ const dx=e.clientX-single.x, dy=e.clientY-single.y;
+    if(Math.abs(dx)+Math.abs(dy)>4) single.moved=true;
+    if(single.moved){ view.tx=single.tx+dx; view.ty=single.ty+dy; apply(); } }
+});
+function up(e){ pts.delete(e.pointerId); if(pts.size<2)pinch=null;
+  if(single && !single.moved && single.id) toggle(single.id);
+  if(pts.size===0){ single=null; svg.classList.remove('grabbing'); } }
+svg.addEventListener('pointerup',up); svg.addEventListener('pointercancel',up);
+svg.addEventListener('wheel',e=>{ e.preventDefault(); const r=svg.getBoundingClientRect();
+  zoomAt(e.clientX-r.left,e.clientY-r.top,Math.exp(-e.deltaY*0.0015)); },{passive:false});
+
+// ---- toolbar ----
+document.getElementById('btnExpand').onclick=()=>{ (function f(n){n.collapsed=false;n._children.forEach(f);})(RAW); layout(); render(); fit(); };
+document.getElementById('btnCollapse').onclick=()=>{ (function f(n){n.collapsed=(n.depth>=1&&n._children.length>0);n._children.forEach(f);})(RAW); layout(); render(); fit(); };
+document.getElementById('btnFit').onclick=fit;
+document.getElementById('btnZoomIn').onclick=()=>{ const r=svg.getBoundingClientRect(); zoomAt(r.width/2,r.height/2,1.2); };
+document.getElementById('btnZoomOut').onclick=()=>{ const r=svg.getBoundingClientRect(); zoomAt(r.width/2,r.height/2,1/1.2); };
+
+function withFull(fn){ const saved=[]; (function f(n){saved.push([n,n.collapsed]);n.collapsed=false;n._children.forEach(f);})(RAW);
+  layout(); const out=fn(); saved.forEach(([n,c])=>n.collapsed=c); layout(); return out; }
+
+document.getElementById('btnPng').onclick=()=>{
+  withFull(()=>{
+    const d=contentDims(), M=36, scale=2, W=d.w+2*M, H=d.h+2*M, {links,nodes}=contentSVG();
+    const str='<svg xmlns="http://www.w3.org/2000/svg" width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'"><rect width="'+W+'" height="'+H+'" fill="#F7F8FA"/><g transform="translate('+M+' '+M+')">'+links+nodes+'</g></svg>';
+    const blob=new Blob([str],{type:'image/svg+xml;charset=utf-8'}), url=URL.createObjectURL(blob), img=new Image();
+    img.onload=()=>{ const c=document.createElement('canvas'); c.width=W*scale; c.height=H*scale;
+      const cx=c.getContext('2d'); cx.scale(scale,scale); cx.drawImage(img,0,0); URL.revokeObjectURL(url);
+      c.toBlob(b=>{ const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='Digitalization_MindMap.png'; document.body.appendChild(a); a.click(); a.remove(); }); };
+    img.onerror=()=>{ URL.revokeObjectURL(url); alert('Trình duyệt này chặn xuất PNG. Hãy dùng nút “In / PDF”.'); };
+    img.src=url;
+  });
+};
+
+document.getElementById('btnPrint').onclick=()=>{
+  withFull(()=>{
+    const d=contentDims(), M=28, W=d.w+2*M, H=d.h+2*M, {links,nodes}=contentSVG();
+    const str='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+W+' '+H+'" width="100%"><rect width="'+W+'" height="'+H+'" fill="#ffffff"/><g transform="translate('+M+' '+M+')">'+links+nodes+'</g></svg>';
+    const w=window.open('','_blank');
+    if(!w){ alert('Cửa sổ in bị chặn. Hãy cho phép pop-up rồi thử lại.'); return; }
+    w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Digitalization — Bản đồ hiện trạng</title><style>@page{margin:10mm;size:landscape}html,body{margin:0}svg{width:100%;height:auto}</style></head><body>'+str+'<scr'+'ipt>window.onload=function(){setTimeout(function(){window.print()},250)}<\/scr'+'ipt></body></html>');
+    w.document.close();
+  });
+};
+
+// ---- header meta ----
+(function meta(){
+  const branches=RAW._children; let total=0; (function c(n){total++;n._children.forEach(c);})(RAW);
+  document.getElementById('stats').innerHTML='<span class="chip"><b>'+branches.length+'</b> nhánh chính</span><span class="chip"><b>'+total+'</b> mục</span>';
+  document.getElementById('legend').innerHTML=branches.map(b=>'<span class="lg"><span class="sw" style="background:'+b.color+'"></span>'+esc(b.name)+'</span>').join('');
+  document.getElementById('foot').textContent='Nguồn: MindMap_Data.xlsx';
+})();
+
+(function collapseInit(n){ n.collapsed=(n.depth>=1&&n._children.length>0); n._children.forEach(collapseInit); })(RAW);
+layout(); render(); fit();
+let rt; addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(fit,150); });
+</script>
+</body>
+</html>
