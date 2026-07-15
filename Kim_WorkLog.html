@@ -3,325 +3,48 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Báo cáo công việc — Nguyễn Phạm Hoàng Kim</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>Báo cáo công việc</title>
 <style>
-  /* ============================================================
-     BÁO CÁO CÔNG VIỆC — daily work report
-     Cập nhật nội dung ở khối "DỮ LIỆU BÁO CÁO" trong <script> cuối trang.
-     ============================================================ */
-  :root{
-    --ink:#14202E;
-    --ink-soft:#22303F;
-    --paper:#F6F8FA;
-    --card:#FFFFFF;
-    --line:#E4E8ED;
-    --line-soft:#EEF1F4;
-    --text:#1C2733;
-    --muted:#5B6876;
-    --muted-2:#8592A0;
-    --accent:#116B8A;
-    --radius:14px;
-    --shadow:0 1px 2px rgba(20,32,46,.04), 0 6px 20px rgba(20,32,46,.06);
-    --sans:'Be Vietnam Pro',system-ui,-apple-system,sans-serif;
-    --mono:'IBM Plex Mono',ui-monospace,monospace;
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  html{-webkit-text-size-adjust:100%}
-  body{
-    font-family:var(--sans);
-    color:var(--text);
-    background:var(--paper);
-    line-height:1.55;
-    -webkit-font-smoothing:antialiased;
-  }
-  a{color:var(--accent);text-decoration:none}
-  a:hover{text-decoration:underline}
-
-  /* ---------- Header band ---------- */
-  .masthead{
-    background:var(--ink);
-    color:#EAF0F6;
-    padding:44px 24px 40px;
-    border-bottom:3px solid var(--accent);
-  }
-  .masthead-inner{max-width:960px;margin:0 auto;
-    display:flex;justify-content:space-between;align-items:flex-end;gap:32px;flex-wrap:wrap}
-  .eyebrow{
-    font-family:var(--mono);
-    font-size:12px;letter-spacing:.18em;text-transform:uppercase;
-    color:#7FA9BD;margin-bottom:14px;
-  }
-  .masthead h1{
-    font-size:clamp(26px,4.5vw,38px);font-weight:700;letter-spacing:-.02em;
-    line-height:1.1;color:#fff;
-  }
-  .masthead .role{margin-top:8px;font-size:15px;color:#9FB2C2;font-weight:400}
-  .updated{
-    font-family:var(--mono);font-size:12px;color:#7FA9BD;
-    text-align:right;white-space:nowrap;
-  }
-  .updated b{display:block;color:#DCE6EF;font-size:15px;font-weight:500;margin-top:3px}
-
-  /* ---------- Latest-day summary ---------- */
-  .summary{
-    max-width:960px;margin:-26px auto 0;padding:0 24px;position:relative;z-index:2;
-  }
-  .summary-card{
-    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-    box-shadow:var(--shadow);padding:22px 26px;
-    display:flex;align-items:center;gap:28px;flex-wrap:wrap;
-  }
-  .summary-date{display:flex;flex-direction:column;gap:2px;padding-right:26px;border-right:1px solid var(--line);}
-  .summary-date .d{font-family:var(--mono);font-size:26px;font-weight:500;color:var(--ink);letter-spacing:-.01em}
-  .summary-date .wd{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
-  .summary-meta{display:flex;flex-direction:column;gap:8px;flex:1;min-width:220px}
-  .summary-meta .lbl{font-size:12px;color:var(--muted-2);font-family:var(--mono);letter-spacing:.08em;text-transform:uppercase}
-  .chips{display:flex;gap:8px;flex-wrap:wrap}
-  .chip{
-    display:inline-flex;align-items:center;gap:7px;
-    font-size:13px;font-weight:500;padding:5px 11px;border-radius:999px;
-    border:1px solid var(--line);background:#fff;color:var(--text);
-  }
-  .chip .dot{width:8px;height:8px;border-radius:50%;flex:none}
-  .chip .n{font-family:var(--mono);font-weight:500}
-
-  /* ---------- Legend ---------- */
-  .legend{max-width:960px;margin:18px auto 0;padding:0 24px;
-    display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-  .legend .cap{font-size:12px;color:var(--muted-2);font-family:var(--mono);letter-spacing:.08em;text-transform:uppercase}
-  .legend-item{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--muted)}
-  .legend-item .dot{width:9px;height:9px;border-radius:50%;flex:none}
-
-  /* ---------- Timeline ---------- */
-  .timeline{max-width:960px;margin:34px auto 0;padding:0 24px 72px}
-  .day{position:relative;padding-left:34px;margin-bottom:38px}
-  .day::before{ /* spine */
-    content:"";position:absolute;left:9px;top:22px;bottom:-38px;width:2px;background:var(--line);
-  }
-  .day:last-child::before{display:none}
-  .day-node{position:absolute;left:0;top:4px;width:20px;height:20px;border-radius:50%;
-    background:#fff;border:2px solid var(--accent);
-    box-shadow:0 0 0 4px var(--paper);}
-  .day-node::after{content:"";position:absolute;inset:4px;border-radius:50%;background:var(--accent)}
-  .day-head{display:flex;align-items:baseline;gap:12px;margin-bottom:16px;flex-wrap:wrap}
-  .day-head .date{font-family:var(--mono);font-size:17px;font-weight:500;color:var(--ink)}
-  .day-head .wd{font-size:13px;color:var(--muted);background:var(--line-soft);
-    padding:2px 9px;border-radius:6px;font-weight:500}
-  .day-head .count{font-size:13px;color:var(--muted-2);margin-left:auto;font-family:var(--mono)}
-
-  .task{
-    background:var(--card);border:1px solid var(--line);border-left-width:3px;
-    border-radius:10px;padding:15px 18px 15px 17px;margin-bottom:11px;
-    box-shadow:var(--shadow);
-    transition:transform .18s ease, box-shadow .18s ease;
-  }
-  .task:hover{transform:translateY(-1px);box-shadow:0 2px 4px rgba(20,32,46,.05),0 10px 26px rgba(20,32,46,.09)}
-  .task-top{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}
-  .task-title{font-size:15.5px;font-weight:600;color:var(--text);line-height:1.4}
-  .pill{
-    display:inline-flex;align-items:center;gap:8px;flex:none;
-    font-size:14.5px;font-weight:700;padding:8px 15px;border-radius:999px;
-    border:1.5px solid transparent;white-space:nowrap;letter-spacing:.01em;
-  }
-  .pill .dot{width:9px;height:9px;border-radius:50%;flex:none}
-  .task-note{margin-top:13px;font-size:15.5px;color:#14202E;line-height:1.6;font-weight:500;
-    padding:13px 16px;border-left:5px solid var(--accent);
-    background:#E4EFF2;border-radius:0 10px 10px 0}
-
-  /* ---------- Footer ---------- */
-  .foot{max-width:960px;margin:0 auto;padding:26px 24px 48px;border-top:1px solid var(--line);
-    display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
-    font-size:12.5px;color:var(--muted-2)}
-  .foot .mono{font-family:var(--mono)}
-
-  noscript .ns{max-width:960px;margin:30px auto;padding:20px 24px;background:#FBF0D9;
-    border:1px solid #EDD9A9;border-radius:12px;color:#8A5A00;font-size:14px}
-
-  /* ---------- Entrance animation ---------- */
-  .task,.summary-card{opacity:0;transform:translateY(8px);animation:rise .5s ease forwards}
-  @keyframes rise{to{opacity:1;transform:none}}
-
-  @media (max-width:560px){
-    .masthead{padding:34px 18px 32px}
-    .updated{text-align:left}
-    .masthead-inner{align-items:flex-start}
-    .summary,.legend,.timeline,.foot{padding-left:18px;padding-right:18px}
-    .summary-card{padding:18px 18px;gap:18px}
-    .summary-date{border-right:none;border-bottom:1px solid var(--line);padding-right:0;padding-bottom:14px;width:100%}
-    .task-top{flex-direction:column;gap:10px}
-  }
-  @media (prefers-reduced-motion:reduce){
-    *{animation:none!important;transition:none!important}
-    .task,.summary-card{opacity:1;transform:none}
-  }
+  html,body{margin:0;padding:0;height:100%;background:#F6F8FA;overflow:hidden}
+  iframe{border:0;width:100%;height:100%;display:block}
+  .fallback{position:fixed;inset:0;display:none;place-items:center;padding:24px;
+    font-family:'Be Vietnam Pro',system-ui,-apple-system,sans-serif}
+  .fallback.show{display:grid}
+  .fallback div{max-width:460px;text-align:center;background:#fff;border:1px solid #E4E8ED;
+    border-radius:14px;padding:28px 26px;box-shadow:0 6px 20px rgba(20,32,46,.06)}
+  .fallback h1{font-size:18px;margin:0 0 10px;color:#14202E}
+  .fallback p{font-size:14.5px;color:#5B6876;line-height:1.6;margin:0 0 18px}
+  .fallback a{display:inline-block;background:#116B8A;color:#fff;text-decoration:none;
+    font-weight:600;font-size:14.5px;padding:11px 18px;border-radius:10px}
 </style>
 </head>
 <body>
 
-  <header class="masthead">
-    <div class="masthead-inner">
-      <div>
-        <div class="eyebrow" id="eyebrow"></div>
-        <h1 id="who"></h1>
-        <div class="role" id="role"></div>
-      </div>
-      <div class="updated">Cập nhật lần cuối<b id="updated"></b></div>
-    </div>
-  </header>
+<!-- ============================================================
+     Dán URL web app của bạn vào src bên dưới (kết thúc bằng /exec)
+     Lấy tại: Apps Script > Deploy > Manage deployments > Web app URL
+     ============================================================ -->
+<iframe
+  id="app"
+  src="https://script.google.com/macros/s/AKfycbxhb9jKD8LUQlfMxNm-cmlNbXt-ugJz9A0ikgz3G8ptsUVkcDRXzcIcFluOoTXtUPYx/exec"
+  allow="clipboard-write"></iframe>
 
-  <section class="summary" id="summary"></section>
-  <div class="legend" id="legend"></div>
-  <main class="timeline" id="timeline"></main>
-
-  <footer class="foot">
-    <span>Tài liệu nội bộ — Công ty San Hà</span>
-    <span class="mono" id="foot-count"></span>
-  </footer>
-
-  <noscript><div class="ns">Trang cần bật JavaScript để hiển thị báo cáo. Nội dung nằm trong khối dữ liệu ở cuối tệp <b>index.html</b>.</div></noscript>
+<div class="fallback" id="fb">
+  <div>
+    <h1>Không tải được ứng dụng</h1>
+    <p>Trình duyệt có thể đang chặn nội dung nhúng. Hãy mở trực tiếp bằng nút bên dưới, hoặc bật cookie của bên thứ ba cho trang này.</p>
+    <a id="direct" href="#" target="_blank" rel="noopener">Mở trực tiếp</a>
+  </div>
+</div>
 
 <script>
-/* ============================================================
-   DỮ LIỆU BÁO CÁO  —  chỉ cần sửa phần này mỗi ngày rồi commit
-   ------------------------------------------------------------
-   • Mỗi công việc là một dòng { ... }, đúng như một dòng trong Excel.
-   • date: định dạng "YYYY-MM-DD".
-   • status: chọn một trong các trạng thái đã khai báo ở STATUS bên dưới
-     (nếu gõ trạng thái mới chưa có, hệ thống vẫn hiển thị bằng màu xám mặc định).
-   • Thêm ngày mới: chỉ cần thêm các dòng có date mới — trang tự gom nhóm
-     và sắp xếp ngày mới nhất lên trên.
-   ============================================================ */
-  const INFO = {
-    name: "Nguyễn Phạm Hoàng Kim",
-    role: "Giám sát Dữ liệu & Chuyển đổi số · Công ty San Hà",
-    eyebrow: "NHẬT KÝ CÔNG VIỆC"
-  };
-
-  const REPORTS = [
-    { date:"2026-07-14", task:"Tạo checklist theo bộ phận và draft Core SOP", status:"Hoàn thành",
-      note:"Nội dung chỉ đang xoay quanh các material hiện có (Blueprint, HDSD, …)." },
-    { date:"2026-07-14", task:"Yêu cầu điều chỉnh add-on phiếu điều chuyển kho", status:"Theo dõi",
-      note:"FTI đã phản hồi báo giá 98 triệu — cần cân nhắc/đánh giá giữa chi phí bỏ ra và chức năng nhận được." },
-    { date:"2026-07-14", task:"Vấn đề hiệu năng tích hợp iVend ↔ SAP", status:"Chuẩn bị phối hợp",
-      note:"Chuẩn bị nội dung làm rõ cho buổi họp Thứ Năm về thông tin/môi trường/tài khoản/quyền cụ thể mà team anh Trọng cần." },
-    { date:"2026-07-14", task:"Trao đổi lại quy trình bán hàng & mua hàng cho chuỗi cửa hàng", status:"Đã nắm các thay đổi",
-      note:"Trao đổi kỹ lại các bước với Hải về các thay đổi hiện tại của quy trình bán hàng & mua hàng cho chuỗi cửa hàng để vẽ lại Draft SOP." },
-  ];
-
-  /* Bảng trạng thái & màu. Thêm trạng thái mới tại đây nếu cần. */
-  const STATUS = {
-    "Hoàn thành":        { fg:"#0F7B4F", bg:"#E6F4EC", bd:"#BCE3CD", dot:"#12A567" },
-    "Đang thực hiện":    { fg:"#1E5F9E", bg:"#E4EDF9", bd:"#C3D6F0", dot:"#2C74D6" },
-    "Theo dõi":          { fg:"#8A5A00", bg:"#FBF0D9", bd:"#EDD9A9", dot:"#C58A12" },
-    "Chuẩn bị phối hợp": { fg:"#5B3FA6", bg:"#EDE7FB", bd:"#D6CAF2", dot:"#7A5CD0" },
-    "Đã nắm các thay đổi":{ fg:"#0C6E75", bg:"#E1F1F2", bd:"#BEE0E2", dot:"#159AA3" },
-    "Tạm hoãn":          { fg:"#9A2F2F", bg:"#FBE7E7", bd:"#F0C9C9", dot:"#CE4B4B" },
-  };
-  const FALLBACK = { fg:"#4A5563", bg:"#EEF1F4", bd:"#DDE2E8", dot:"#8A94A0" };
-
-/* ===================== RENDER (không cần sửa) ===================== */
-  const WD = ['Chủ Nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'];
-  const st = s => STATUS[s] || FALLBACK;
-  const el = (t,c,txt)=>{const e=document.createElement(t);if(c)e.className=c;if(txt!=null)e.textContent=txt;return e;};
-
-  function fmt(iso){
-    const [y,m,d]=iso.split('-').map(Number);
-    const dt=new Date(y,m-1,d);
-    return { full:`${String(d).padStart(2,'0')}/${String(m).padStart(2,'0')}/${y}`, wd:WD[dt.getDay()], key:y*10000+m*100+d };
-  }
-  function dot(color,size){const s=el('span','dot');s.style.background=color;if(size){s.style.width=size+'px';s.style.height=size+'px';}return s;}
-
-  // header
-  document.getElementById('eyebrow').textContent=INFO.eyebrow;
-  document.getElementById('who').textContent=INFO.name;
-  document.getElementById('role').textContent=INFO.role;
-
-  // group by date
-  const groups={};
-  REPORTS.forEach(r=>{(groups[r.date]=groups[r.date]||[]).push(r);});
-  const dates=Object.keys(groups).sort((a,b)=>fmt(b).key-fmt(a).key);
-
-  document.getElementById('updated').textContent = dates.length?fmt(dates[0]).full:'—';
-  document.getElementById('foot-count').textContent = `${REPORTS.length} mục · ${dates.length} ngày`;
-
-  // status counter for a task list, ordered by STATUS declaration
-  function counts(list){
-    const m=new Map();
-    list.forEach(t=>m.set(t.status,(m.get(t.status)||0)+1));
-    const ordered=[...Object.keys(STATUS),...[...m.keys()].filter(k=>!(k in STATUS))];
-    return ordered.filter(k=>m.has(k)).map(k=>[k,m.get(k)]);
-  }
-  function chipRow(list,cls){
-    const wrap=el('div','chips');
-    counts(list).forEach(([s,n])=>{
-      const c=el('span',cls||'chip');
-      c.appendChild(dot(st(s).dot));
-      c.appendChild(el('span',null,s));
-      const b=el('span','n',` ${n}`);c.appendChild(b);
-      wrap.appendChild(c);
-    });
-    return wrap;
-  }
-
-  // latest-day summary
-  if(dates.length){
-    const latest=dates[0], f=fmt(latest), list=groups[latest];
-    const card=el('div','summary-card');
-    const dd=el('div','summary-date');
-    dd.appendChild(Object.assign(el('span','d'),{textContent:f.full}));
-    dd.appendChild(el('span','wd',f.wd));
-    const meta=el('div','summary-meta');
-    meta.appendChild(el('span','lbl',`${list.length} công việc trong ngày`));
-    meta.appendChild(chipRow(list,'chip'));
-    card.appendChild(dd);card.appendChild(meta);
-    document.getElementById('summary').appendChild(card);
-  }
-
-  // legend (only statuses actually used)
-  const used=[...new Set(REPORTS.map(r=>r.status))];
-  const legendOrder=[...Object.keys(STATUS),...used.filter(k=>!(k in STATUS))].filter(k=>used.includes(k));
-  const lg=document.getElementById('legend');
-  lg.appendChild(el('span','cap','Chú thích'));
-  legendOrder.forEach(s=>{
-    const i=el('span','legend-item');
-    i.appendChild(dot(st(s).dot,9));
-    i.appendChild(el('span',null,s));
-    lg.appendChild(i);
-  });
-
-  // timeline
-  const tl=document.getElementById('timeline');
-  dates.forEach((date,di)=>{
-    const f=fmt(date), list=groups[date];
-    const day=el('div','day');
-    day.appendChild(el('span','day-node'));
-    const head=el('div','day-head');
-    head.appendChild(el('span','date',f.full));
-    head.appendChild(el('span','wd',f.wd));
-    head.appendChild(el('span','count',`${list.length} việc`));
-    day.appendChild(head);
-
-    list.forEach((t,ti)=>{
-      const s=st(t.status);
-      const card=el('div','task');
-      card.style.borderLeftColor=s.dot;
-      card.style.animationDelay=(di*0.05+ti*0.05)+'s';
-      const top=el('div','task-top');
-      top.appendChild(el('div','task-title',t.task));
-      const pill=el('span','pill');
-      pill.style.background=s.bg;pill.style.color=s.fg;pill.style.borderColor=s.bd;
-      pill.appendChild(dot(s.dot));
-      pill.appendChild(el('span',null,t.status));
-      top.appendChild(pill);
-      card.appendChild(top);
-      if(t.note){card.appendChild(el('div','task-note',t.note));}
-      day.appendChild(card);
-    });
-    tl.appendChild(day);
-  });
+  var frame = document.getElementById('app');
+  document.getElementById('direct').href = frame.src;
+  var loaded = false;
+  frame.addEventListener('load', function(){ loaded = true; });
+  setTimeout(function(){
+    if(!loaded) document.getElementById('fb').classList.add('show');
+  }, 8000);
 </script>
 </body>
 </html>
